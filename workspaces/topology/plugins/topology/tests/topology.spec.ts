@@ -15,11 +15,7 @@
  */
 import { expect, Page, test } from '@playwright/test';
 
-import {
-  Common,
-  isNfsAppMode,
-  topologyEntityHeaderTabTestId,
-} from './utils/topologyHelper';
+import { Common } from './utils/topologyHelper';
 import { getTranslations, TopologyMessages } from './utils/translations';
 
 const TOPOLOGY_NODES = {
@@ -46,7 +42,6 @@ test.describe('Topology plugin', () => {
   let page: Page;
   let common: Common;
   let translations: TopologyMessages;
-  let currentLocale: string;
 
   test.beforeAll(async ({ browser }) => {
     const context = await browser.newContext();
@@ -54,7 +49,9 @@ test.describe('Topology plugin', () => {
     common = new Common(page);
     await common.loginAsGuest();
 
-    currentLocale = await page.evaluate(() => globalThis.navigator.language);
+    const currentLocale = await page.evaluate(
+      () => globalThis.navigator.language,
+    );
     translations = getTranslations(currentLocale);
     await common.switchToLocale(currentLocale);
   });
@@ -65,10 +62,6 @@ test.describe('Topology plugin', () => {
 
   test.describe('Missing permissions page', () => {
     test('shows missing permissions error', async ({ browser }, testInfo) => {
-      test.skip(
-        isNfsAppMode(),
-        'Standalone /missing-permissions route exists only in legacy dev app',
-      );
       await page.goto('/missing-permissions');
 
       const topologyTextCount = await page
@@ -91,16 +84,14 @@ test.describe('Topology plugin', () => {
 
   test.describe('Topology view', () => {
     test.beforeEach(async () => {
-      await common.navigateToTopologyView(currentLocale);
+      await page.goto('/topology');
     });
 
     test('displays header and cluster controls', async ({
       browser,
     }, testInfo) => {
       await expect(page.getByRole('heading')).toContainText('backstage');
-      await expect(
-        page.getByTestId(topologyEntityHeaderTabTestId()),
-      ).toBeVisible();
+      await expect(page.getByTestId('header-tab-0')).toBeVisible();
       await expect(page.locator('#pf-topology-view-0')).toMatchAriaSnapshot(`
         - button "${translations.toolbar.selectCluster}"
         - button "${translations.toolbar.displayOptions}"
